@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>nikahin – Masuk</title>
+<link rel="stylesheet" href="../assets/css/main.css">
+<style>
+  .login-wrap {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 40px 24px;
+    position: relative; overflow: hidden;
+  }
+  .login-bg {
+    position: fixed; inset: 0; z-index: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(109,40,217,.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(201,169,110,.08) 0%, transparent 50%);
+  }
+  .login-card {
+    position: relative; z-index: 1;
+    width: 100%; max-width: 400px;
+    background: rgba(20,14,31,.8);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 40px 32px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 20px 60px rgba(0,0,0,.6), 0 0 80px rgba(109,40,217,.1);
+  }
+  .brand {
+    text-align: center; margin-bottom: 32px;
+  }
+  .brand-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 48px; font-weight: 300;
+    color: var(--gold); letter-spacing: 4px;
+    display: block;
+  }
+  .brand-tagline {
+    font-size: 11px; letter-spacing: 3px;
+    text-transform: uppercase; color: var(--text-dim);
+  }
+  .ornament { color: var(--gold); opacity: .4; font-size: 18px; display: block; margin: 12px 0; }
+  .tabs {
+    display: flex; background: var(--surface2);
+    border-radius: 50px; padding: 4px;
+    margin-bottom: 28px;
+  }
+  .tab {
+    flex: 1; padding: 10px;
+    text-align: center; border-radius: 50px;
+    font-size: 13px; letter-spacing: 1px; text-transform: uppercase;
+    cursor: pointer; transition: var(--transition);
+    color: var(--text-dim);
+  }
+  .tab.active { background: var(--purple); color: #fff; }
+
+  .form-footer {
+    margin-top: 24px; text-align: center;
+    font-size: 13px; color: var(--text-dim);
+  }
+  .form-footer a { color: var(--gold); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="login-bg"></div>
+<div class="login-wrap">
+  <div class="login-card page-enter">
+    <div class="brand">
+      <span class="brand-name">nikahin</span>
+      <span class="ornament">✦ ✦ ✦</span>
+      <span class="brand-tagline">E-Wedding Invitation</span>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs" id="tabs">
+      <div class="tab active" data-tab="login">Masuk</div>
+      <div class="tab" data-tab="register">Daftar</div>
+    </div>
+
+    <!-- Login Form -->
+    <div id="form-login">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <div class="input-group">
+          <span class="input-icon">✉</span>
+          <input type="email" id="login-email" class="form-control" placeholder="nama@email.com">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <div class="input-group">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="login-pass" class="form-control" placeholder="Min. 8 karakter">
+        </div>
+      </div>
+      <button class="btn btn-primary btn-full" id="btn-login">Masuk</button>
+    </div>
+
+    <!-- Register Form -->
+    <div id="form-register" class="hidden">
+      <div class="form-group">
+        <label class="form-label">Nama Lengkap</label>
+        <input type="text" id="reg-name" class="form-control" placeholder="Nama kamu">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" id="reg-email" class="form-control" placeholder="nama@email.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" id="reg-pass" class="form-control" placeholder="Min. 8 karakter">
+      </div>
+      <button class="btn btn-primary btn-full" id="btn-register">Buat Akun</button>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/main.js"></script>
+<script>
+  // Redirect if already logged in
+  if (Auth.token()) window.location = 'landing.html';
+
+  // Tabs
+  document.getElementById('tabs').addEventListener('click', e => {
+    const tab = e.target.closest('[data-tab]');
+    if (!tab) return;
+    const t = tab.dataset.tab;
+    document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('form-login').classList.toggle('hidden', t !== 'login');
+    document.getElementById('form-register').classList.toggle('hidden', t !== 'register');
+  });
+
+  // Login
+  document.getElementById('btn-login').addEventListener('click', async () => {
+    const email = document.getElementById('login-email').value.trim();
+    const pass  = document.getElementById('login-pass').value;
+    if (!email || !pass) { toast('Email dan password wajib diisi', 'error'); return; }
+    showLoading('Masuk…');
+    try {
+      const res = await api.post('/auth/login', { email, password: pass });
+      Auth.set(res.token, res.user);
+      window.location = 'landing.html';
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally { hideLoading(); }
+  });
+
+  // Enter key on login
+  ['login-email','login-pass'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('btn-login').click();
+    });
+  });
+
+  // Register
+  document.getElementById('btn-register').addEventListener('click', async () => {
+    const name  = document.getElementById('reg-name').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const pass  = document.getElementById('reg-pass').value;
+    if (!name || !email || !pass) { toast('Semua field wajib diisi', 'error'); return; }
+    showLoading('Membuat akun…');
+    try {
+      const res = await api.post('/auth/register', { name, email, password: pass });
+      Auth.set(res.token, res.user);
+      window.location = 'landing.html';
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally { hideLoading(); }
+  });
+</script>
+</body>
+</html>

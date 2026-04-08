@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>nikahin – Kirim Undangan</title>
+<link rel="stylesheet" href="../assets/css/main.css">
+<style>
+  .publish-wrap { min-height: 100vh; padding-bottom: 100px; }
+
+  /* Link section */
+  .link-card {
+    margin: 0 24px 24px;
+    background: linear-gradient(135deg,rgba(109,40,217,.12),rgba(76,29,149,.06));
+    border: 1px solid rgba(109,40,217,.25);
+    border-radius: var(--radius); padding: 20px;
+  }
+  .link-url {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px 16px;
+    font-size: 14px; color: var(--gold);
+    word-break: break-all; margin: 10px 0;
+    font-family: monospace;
+  }
+
+  /* Guest list */
+  .guests-section { padding: 0 24px 24px; }
+  .guest-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 14px 14px 16px;
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 12px;
+    transition: var(--transition);
+  }
+  .guest-row.sent { opacity: .5; }
+  .guest-avatar {
+    width: 40px; height: 40px;
+    background: var(--surface2);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0; border: 1px solid var(--border);
+    font-family: 'Cormorant Garamond', serif; color: var(--gold);
+  }
+  .guest-info { flex: 1; }
+  .guest-name { font-size: 15px; color: var(--text); }
+  .guest-contact { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+  .guest-sent-badge {
+    font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 50px;
+    background: rgba(34,197,94,.1); color: #4ade80; border: 1px solid rgba(34,197,94,.2);
+  }
+  .guest-wa-btn {
+    background: #25d366; color: #fff; border: none;
+    padding: 6px 12px; border-radius: 50px;
+    font-size: 12px; cursor: pointer; font-family: inherit;
+    flex-shrink: 0; display: flex; align-items: center; gap: 4px;
+  }
+
+  /* Add guest form */
+  .add-guest-section {
+    margin: 0 24px 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px;
+  }
+  .add-guest-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px; color: var(--text); margin-bottom: 16px;
+  }
+  .guest-entry {
+    display: grid; grid-template-columns: 1fr;
+    gap: 8px; margin-bottom: 12px;
+    padding-bottom: 12px; border-bottom: 1px solid var(--border);
+  }
+  .guest-entry:last-of-type { border: none; }
+  .guest-entry-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 4px;
+  }
+  .guest-entry-label { font-size: 12px; color: var(--text-dim); }
+  .remove-guest-btn {
+    background: none; border: none; color: var(--text-dim);
+    cursor: pointer; font-size: 18px; line-height: 1; padding: 0;
+  }
+  .remove-guest-btn:hover { color: #f87171; }
+
+  /* Blast button */
+  .blast-section {
+    margin: 0 24px 24px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px;
+  }
+  .blast-info {
+    font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 16px;
+  }
+
+  /* WA links modal */
+  .wa-modal {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(13,10,20,.92); backdrop-filter: blur(12px);
+    display: none; flex-direction: column;
+  }
+  .wa-modal.show { display: flex; }
+  .wa-modal-header {
+    padding: 20px 24px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .wa-modal-title {
+    font-family: 'Cormorant Garamond', serif; font-size: 22px; color: var(--text);
+  }
+  .wa-modal-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
+  .wa-link-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 14px; margin-bottom: 10px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .wa-link-name { flex: 1; font-size: 15px; color: var(--text); }
+  .wa-link-phone { font-size: 12px; color: var(--text-dim); }
+</style>
+</head>
+<body>
+<div class="publish-wrap">
+  <div class="topbar">
+    <a href="view.html" class="topbar-back" id="btn-back">←</a>
+    <div class="topbar-title">Kirim Undangan</div>
+    <div style="width:36px"></div>
+  </div>
+
+  <!-- Invitation link -->
+  <div style="padding:24px 24px 0">
+    <div class="section-label">Link Undangan</div>
+    <div class="section-title" id="couple-name" style="font-size:24px">Memuat…</div>
+  </div>
+  <div class="link-card" id="link-card" style="margin-top:16px">
+    <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px">Bagikan link ini kepada tamu</div>
+    <div class="link-url" id="inv-link">—</div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-gold btn-sm" id="btn-copy-link">Salin Link</button>
+      <a class="btn btn-ghost btn-sm" id="btn-open-link" href="#" target="_blank">Buka →</a>
+    </div>
+  </div>
+
+  <!-- Add guests -->
+  <div class="add-guest-section">
+    <div class="add-guest-title">✦ Daftar Tamu</div>
+    <div id="guest-entries"></div>
+    <button class="btn btn-ghost btn-full" id="btn-add-guest" style="margin-bottom:14px">+ Tambah Tamu</button>
+    <button class="btn btn-primary btn-full" id="btn-save-guests">Simpan Daftar Tamu</button>
+  </div>
+
+  <!-- Guest list already saved -->
+  <div class="guests-section">
+    <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--text-dim);margin-bottom:14px">
+      Tamu Tersimpan
+    </div>
+    <div id="saved-guests-list">
+      <div style="color:var(--text-dim);font-size:14px">Belum ada tamu</div>
+    </div>
+  </div>
+
+  <!-- Blast section -->
+  <div class="blast-section">
+    <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px">
+      Kirim ke Semua Tamu
+    </div>
+    <div class="blast-info">
+      Sistem akan mengirimkan email ke semua tamu yang memiliki email, 
+      dan menghasilkan link WhatsApp untuk tamu dengan nomor HP.
+    </div>
+    <button class="btn btn-primary btn-full" id="btn-blast">
+      📨 Kirim Undangan ke Semua Tamu
+    </button>
+  </div>
+</div>
+
+<!-- WA Links Modal -->
+<div class="wa-modal" id="wa-modal">
+  <div class="wa-modal-header">
+    <div class="wa-modal-title">Link WhatsApp</div>
+    <button class="topbar-back" id="btn-close-wa">✕</button>
+  </div>
+  <div class="wa-modal-body" id="wa-links-body"></div>
+</div>
+
+<script src="../assets/js/main.js"></script>
+<script>
+if (!Auth.check()) void 0;
+
+const params  = new URLSearchParams(location.search);
+const invId   = parseInt(params.get('id') || '0');
+let currentInv = null;
+let guestEntries = [];
+
+document.getElementById('btn-back').href = `view.html?id=${invId}`;
+
+// ── Load invitation ───────────────────────────────────────
+async function loadInvitation() {
+  if (!invId) { toast('ID undangan tidak ditemukan', 'error'); return; }
+  showLoading('Memuat…');
+  try {
+    const inv = await api.get(`/invitation/${invId}`);
+    currentInv = inv;
+
+    document.getElementById('couple-name').textContent = `${inv.groom_name} & ${inv.bride_name}`;
+
+    if (inv.status === 'published') {
+      const link = `${window.location.origin}/${inv.slug}`;
+      document.getElementById('inv-link').textContent = link;
+      document.getElementById('btn-open-link').href = link;
+    } else {
+      document.getElementById('link-card').innerHTML = `
+        <div style="font-size:14px;color:var(--text-muted);text-align:center;padding:10px">
+          Undangan belum dipublikasikan. 
+          <a href="view.html?id=${invId}" style="color:var(--gold)">Publikasikan dahulu →</a>
+        </div>`;
+    }
+
+    await loadSavedGuests();
+  } catch(e) { toast(e.message, 'error'); }
+  finally { hideLoading(); }
+}
+
+// ── Guest entry management ────────────────────────────────
+function addEntry(name = '', phone = '', email = '') {
+  const id  = Date.now();
+  guestEntries.push({ id, name, phone, email });
+  renderEntries();
+}
+
+function removeEntry(id) {
+  guestEntries = guestEntries.filter(e => e.id !== id);
+  renderEntries();
+}
+
+function renderEntries() {
+  const container = document.getElementById('guest-entries');
+  container.innerHTML = guestEntries.map((e, i) => `
+    <div class="guest-entry" data-id="${e.id}">
+      <div class="guest-entry-header">
+        <span class="guest-entry-label">Tamu ${i + 1}</span>
+        <button class="remove-guest-btn" onclick="removeEntry(${e.id})">×</button>
+      </div>
+      <input class="form-control" placeholder="Nama tamu *" value="${e.name}"
+        oninput="updateEntry(${e.id},'name',this.value)" style="margin-bottom:6px">
+      <input class="form-control" placeholder="No. HP (WA)" type="tel" value="${e.phone}"
+        oninput="updateEntry(${e.id},'phone',this.value)" style="margin-bottom:6px">
+      <input class="form-control" placeholder="Email" type="email" value="${e.email}"
+        oninput="updateEntry(${e.id},'email',this.value)">
+    </div>`).join('');
+}
+
+function updateEntry(id, field, val) {
+  const e = guestEntries.find(x => x.id === id);
+  if (e) e[field] = val;
+}
+
+document.getElementById('btn-add-guest').addEventListener('click', () => {
+  addEntry();
+  document.querySelector('.guest-entry:last-child input')?.focus();
+});
+
+// Start with 1 empty entry
+addEntry();
+
+// ── Save guests ───────────────────────────────────────────
+document.getElementById('btn-save-guests').addEventListener('click', async () => {
+  const valid = guestEntries.filter(e => e.name.trim());
+  if (!valid.length) { toast('Tambahkan minimal 1 tamu dengan nama', 'error'); return; }
+  showLoading('Menyimpan tamu…');
+  try {
+    await api.post('/guest/add', {
+      invitation_id: invId,
+      guests: valid.map(e => ({ name: e.name, phone: e.phone, email: e.email }))
+    });
+    toast(`${valid.length} tamu disimpan!`, 'success');
+    guestEntries = [];
+    renderEntries();
+    addEntry();
+    await loadSavedGuests();
+  } catch(e) { toast(e.message, 'error'); }
+  finally { hideLoading(); }
+});
+
+// ── Load saved guests ─────────────────────────────────────
+async function loadSavedGuests() {
+  try {
+    const guests = await api.get(`/guest/${invId}`);
+    const container = document.getElementById('saved-guests-list');
+    if (!guests.length) {
+      container.innerHTML = '<div style="color:var(--text-dim);font-size:14px">Belum ada tamu tersimpan</div>';
+      return;
+    }
+    const inv = currentInv;
+    const link = inv?.status === 'published' ? `${window.location.origin}/${inv?.slug}` : '';
+    const gb   = inv ? `${inv.groom_name} & ${inv.bride_name}` : '';
+
+    container.innerHTML = guests.map(g => {
+      const initials = g.name.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase();
+      const waUrl = g.phone && link
+        ? `https://wa.me/${g.phone.replace(/[^0-9]/g,'').replace(/^0/,'62')}?text=${encodeURIComponent(`Hai ${g.name},\nKami mengundang Anda ke pernikahan kami:\n*${gb}*\n\n${link}`)}`
+        : '';
+      return `
+        <div class="guest-row ${g.sent_at ? 'sent' : ''}">
+          <div class="guest-avatar">${initials}</div>
+          <div class="guest-info">
+            <div class="guest-name">${g.name}</div>
+            <div class="guest-contact">${[g.phone, g.email].filter(Boolean).join(' · ') || 'Tidak ada kontak'}</div>
+          </div>
+          ${g.sent_at ? '<span class="guest-sent-badge">Terkirim</span>' : ''}
+          ${waUrl ? `<button class="guest-wa-btn" onclick="window.open('${waUrl}','_blank')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.11.547 4.1 1.504 5.832L0 24l6.334-1.482A11.955 11.955 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.846 0-3.574-.49-5.065-1.346l-.363-.214-3.76.879.897-3.669-.234-.378A9.958 9.958 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+            WA
+          </button>` : ''}
+        </div>`;
+    }).join('');
+  } catch(e) {}
+}
+
+// ── Blast ─────────────────────────────────────────────────
+document.getElementById('btn-blast').addEventListener('click', async () => {
+  if (!currentInv) return;
+  if (currentInv.status !== 'published') {
+    toast('Publikasikan undangan terlebih dahulu', 'error'); return;
+  }
+  showLoading('Mengirimkan undangan…');
+  try {
+    const res = await api.post('/guest/blast', { invitation_id: invId });
+    toast(`Terkirim ke ${res.sent} tamu! ✉`, 'success');
+    await loadSavedGuests();
+
+    // Show WA links
+    if (res.whatsapp_links?.length) {
+      showWALinks(res.whatsapp_links);
+    }
+  } catch(e) { toast(e.message, 'error'); }
+  finally { hideLoading(); }
+});
+
+function showWALinks(links) {
+  const body = document.getElementById('wa-links-body');
+  body.innerHTML = `
+    <p style="font-size:14px;color:var(--text-muted);margin-bottom:16px">
+      Tap tombol di bawah untuk membuka WhatsApp dan mengirim pesan secara langsung:
+    </p>` +
+    links.map(l => `
+      <div class="wa-link-item">
+        <div style="flex:1">
+          <div class="wa-link-name">${l.name}</div>
+          <div class="wa-link-phone">${l.phone}</div>
+        </div>
+        <a href="${l.wa_url}" target="_blank" class="guest-wa-btn">
+          Kirim WA
+        </a>
+      </div>`).join('');
+  document.getElementById('wa-modal').classList.add('show');
+}
+
+document.getElementById('btn-close-wa').addEventListener('click', () => {
+  document.getElementById('wa-modal').classList.remove('show');
+});
+
+document.getElementById('btn-copy-link').addEventListener('click', () => {
+  const link = document.getElementById('inv-link').textContent;
+  navigator.clipboard.writeText(link).then(() => toast('Link disalin!', 'success'));
+});
+
+// ── Init ─────────────────────────────────────────────────
+loadInvitation();
+</script>
+</body>
+</html>

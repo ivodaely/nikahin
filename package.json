@@ -1,0 +1,12 @@
+{
+  "name": "nikahin",
+  "version": "1.0.0",
+  "description": "E-Wedding Invitation Platform with AI",
+  "scripts": {
+    "dev": "npx live-server frontend --port=3000 --open=pages/login.html",
+    "setup": "node scripts/setup.js"
+  },
+  "dependencies": {
+    "live-server": "^1.2.2"
+  }
+}

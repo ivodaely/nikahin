@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>nikahin – Undangan Saya</title>
+<link rel="stylesheet" href="../assets/css/main.css">
+<style>
+  .view-wrap { min-height: 100vh; padding-bottom: 90px; }
+
+  /* List view */
+  .list-view { padding: 24px; }
+  .page-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 32px; font-weight: 400; color: var(--text);
+    margin-bottom: 4px;
+  }
+  .page-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 28px; }
+
+  .inv-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden; margin-bottom: 14px;
+    transition: var(--transition);
+    cursor: pointer;
+    text-decoration: none; color: inherit;
+    display: block;
+  }
+  .inv-item:hover { border-color: rgba(201,169,110,.35); transform: translateY(-2px); }
+  .inv-hero-thumb {
+    height: 160px; background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 48px; overflow: hidden; position: relative;
+  }
+  .inv-hero-thumb img { width:100%;height:100%;object-fit:cover; }
+  .inv-hero-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to bottom, transparent 40%, rgba(13,10,20,.9));
+  }
+  .inv-hero-names {
+    position: absolute; bottom: 12px; left: 16px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px; color: var(--text); font-weight: 400;
+  }
+  .inv-meta {
+    padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .inv-date-small { font-size: 13px; color: var(--text-muted); }
+  .inv-actions { display: flex; gap: 8px; }
+
+  /* Detail view */
+  .detail-view { display: none; }
+
+  /* Invitation preview card */
+  .preview-hero {
+    height: 260px; background: var(--surface2);
+    position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .preview-hero img { width:100%;height:100%;object-fit:cover;position:absolute;inset:0; }
+  .preview-hero-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,.2), rgba(13,10,20,.85));
+  }
+  .preview-hero-content {
+    position: relative; z-index: 1; text-align: center; padding: 0 24px;
+  }
+  .preview-couple {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 32px; font-weight: 300; color: var(--text); line-height: 1.2;
+  }
+  .preview-couple em { color: var(--gold); }
+  .preview-date-tag {
+    margin-top: 10px; display: inline-block;
+    font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--text-muted); border: 1px solid var(--border);
+    padding: 4px 16px; border-radius: 50px;
+  }
+
+  /* Stats row */
+  .stats-row {
+    display: grid; grid-template-columns: repeat(3,1fr);
+    gap: 1px; background: var(--border);
+    margin: 0 24px 24px;
+    border-radius: var(--radius-sm); overflow: hidden;
+  }
+  .stat-cell {
+    background: var(--surface); padding: 14px 8px;
+    text-align: center;
+  }
+  .stat-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px; color: var(--gold);
+  }
+  .stat-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+
+  /* Action buttons */
+  .action-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px; padding: 0 24px 24px;
+  }
+  .action-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 14px 12px;
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer; text-decoration: none; color: inherit;
+    transition: var(--transition); font-size: 14px;
+    font-family: 'Jost', sans-serif;
+  }
+  .action-btn:hover { border-color: rgba(201,169,110,.3); }
+  .action-btn.danger:hover { border-color: rgba(239,68,68,.3); color: #f87171; }
+  .action-icon { font-size: 20px; flex-shrink: 0; }
+
+  /* Publish section */
+  .publish-section {
+    margin: 0 24px 24px; padding: 20px;
+    background: linear-gradient(135deg,rgba(109,40,217,.1),rgba(76,29,149,.05));
+    border: 1px solid rgba(109,40,217,.25); border-radius: var(--radius);
+  }
+  .publish-section.published {
+    background: linear-gradient(135deg,rgba(34,197,94,.08),rgba(22,163,74,.04));
+    border-color: rgba(34,197,94,.25);
+  }
+
+  /* Design preview */
+  .design-preview {
+    margin: 0 24px 24px;
+    padding: 16px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: var(--radius);
+  }
+  .design-palette {
+    display: flex; gap: 8px; margin-top: 10px;
+  }
+  .swatch {
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.1);
+    flex-shrink: 0;
+  }
+  .design-quote {
+    margin-top: 12px; padding: 12px;
+    background: var(--surface2); border-radius: var(--radius-sm);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px; color: var(--gold); font-style: italic;
+    line-height: 1.6; border-left: 2px solid var(--gold);
+    padding-left: 16px;
+  }
+
+  /* Three.js canvas */
+  #inv-canvas {
+    width: 100%; height: 200px;
+    display: block; margin: 0 0 24px;
+  }
+
+  /* RSVP list */
+  .rsvp-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+</style>
+</head>
+<body>
+<div class="view-wrap">
+  <!-- List View -->
+  <div class="list-view" id="list-view">
+    <div class="topbar">
+      <a href="landing.html" class="topbar-back">←</a>
+      <div class="topbar-title">Undangan Saya</div>
+      <a href="create.html" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:var(--purple);color:#fff;text-decoration:none;font-size:20px;flex-shrink:0;">+</a>
+    </div>
+    <div style="padding:24px 24px 0">
+      <p class="page-sub">Kelola semua undangan pernikahan Anda</p>
+    </div>
+    <div style="padding:0 24px" id="inv-list-container">
+      <div style="text-align:center;padding:60px 0;color:var(--text-dim)" id="inv-empty" style="display:none">
+        <div style="font-size:48px;margin-bottom:16px">💍</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--text-muted);margin-bottom:8px">Belum ada undangan</div>
+        <div style="font-size:14px;margin-bottom:24px">Buat undangan pertama Anda sekarang</div>
+        <a href="create.html" class="btn btn-primary">Buat Undangan</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail View -->
+  <div class="detail-view" id="detail-view">
+    <div class="topbar">
+      <button class="topbar-back" id="btn-back-list">←</button>
+      <div class="topbar-title" id="detail-title">Undangan</div>
+      <a id="btn-edit-inv" href="#" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);text-decoration:none;font-size:16px;flex-shrink:0;">✏</a>
+    </div>
+
+    <!-- Hero Preview -->
+    <div class="preview-hero" id="preview-hero">
+      <div class="preview-hero-overlay"></div>
+      <div class="preview-hero-content">
+        <div class="preview-couple" id="preview-couple">— & —</div>
+        <div class="preview-date-tag" id="preview-date-tag">—</div>
+      </div>
+    </div>
+
+    <!-- Three.js canvas -->
+    <canvas id="inv-canvas"></canvas>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-cell"><div class="stat-num" id="stat-guests">0</div><div class="stat-label">Tamu</div></div>
+      <div class="stat-cell"><div class="stat-num" id="stat-rsvp">0</div><div class="stat-label">RSVP</div></div>
+      <div class="stat-cell"><div class="stat-num" id="stat-greet">0</div><div class="stat-label">Ucapan</div></div>
+    </div>
+
+    <!-- Design preview -->
+    <div class="design-preview" id="design-preview" style="display:none">
+      <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px">Desain AI</div>
+      <div class="design-palette" id="design-palette"></div>
+      <div class="design-quote" id="design-quote"></div>
+    </div>
+
+    <!-- Publish section -->
+    <div class="publish-section" id="publish-section">
+      <div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--purple-lt);margin-bottom:8px" id="publish-label">Status Publikasi</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--text);margin-bottom:12px" id="publish-status-text">Undangan belum dipublikasikan</div>
+      <div id="publish-link-row" style="display:none;margin-bottom:12px">
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:6px">Link undangan:</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div id="publish-link" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-muted);word-break:break-all"></div>
+          <button class="btn btn-gold btn-sm" id="btn-copy-link">Salin</button>
+        </div>
+      </div>
+      <div id="publish-actions"></div>
+    </div>
+
+    <!-- Action Grid -->
+    <div class="action-grid">
+      <button class="action-btn" id="btn-preview-live">
+        <span class="action-icon">👁</span>Preview Undangan
+      </button>
+      <a href="publish.html" class="action-btn" id="btn-go-publish">
+        <span class="action-icon">✉</span>Kirim ke Tamu
+      </a>
+      <button class="action-btn" id="btn-regen-design">
+        <span class="action-icon">✨</span>Regen Desain AI
+      </button>
+      <button class="action-btn danger" id="btn-delete-inv">
+        <span class="action-icon">🗑</span>Hapus
+      </button>
+    </div>
+
+    <!-- RSVP list -->
+    <div style="padding: 0 24px 24px">
+      <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--text-dim);margin-bottom:14px">Konfirmasi Kehadiran</div>
+      <div id="rsvp-list"><div style="color:var(--text-dim);font-size:14px">Belum ada RSVP</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom Nav -->
+<nav class="nav">
+  <a href="landing.html" class="nav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>Beranda
+  </a>
+  <a href="create.html" class="nav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Buat
+  </a>
+  <a href="view.html" class="nav-item active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Undangan
+  </a>
+  <a href="landing.html" class="nav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Profil
+  </a>
+</nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/three-particles.js"></script>
+<script>
+if (!Auth.check()) void 0;
+
+let currentInv = null;
+let threeCleanup = null;
+
+// ── Load List ─────────────────────────────────────────────
+async function loadList() {
+  try {
+    const invs = await api.get('/invitation');
+    const container = document.getElementById('inv-list-container');
+    const empty = document.getElementById('inv-empty');
+
+    if (!invs || invs.length === 0) {
+      empty.style.display = 'block'; return;
+    }
+    empty.style.display = 'none';
+
+    // Clear old
+    container.querySelectorAll('.inv-item').forEach(el => el.remove());
+
+    invs.forEach(inv => {
+      const el = document.createElement('div');
+      el.className = 'inv-item';
+      el.innerHTML = `
+        <div class="inv-hero-thumb">
+          ${inv.hero_photo ? `<img src="${inv.hero_photo}">` : '💍'}
+          <div class="inv-hero-overlay"></div>
+          <div class="inv-hero-names">${inv.groom_name} & ${inv.bride_name}</div>
+        </div>
+        <div class="inv-meta">
+          <div class="inv-date-small">${formatDate(inv.wedding_date)}</div>
+          <div class="inv-status ${inv.status}">${inv.status === 'published' ? '● Published' : '○ Draft'}</div>
+        </div>`;
+      el.addEventListener('click', () => openDetail(inv.id));
+      container.appendChild(el);
+    });
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ── Open Detail ───────────────────────────────────────────
+async function openDetail(id) {
+  showLoading('Memuat undangan…');
+  try {
+    const inv = await api.get(`/invitation/${id}`);
+    currentInv = inv;
+
+    // Switch views
+    document.getElementById('list-view').style.display = 'none';
+    document.getElementById('detail-view').style.display = 'block';
+
+    // Hero
+    document.getElementById('detail-title').textContent =
+      `${inv.groom_name} & ${inv.bride_name}`;
+    document.getElementById('preview-couple').innerHTML =
+      `${inv.groom_name}<br><em>&</em><br>${inv.bride_name}`;
+    document.getElementById('preview-date-tag').textContent = formatDate(inv.wedding_date);
+
+    if (inv.hero_photo) {
+      const hero = document.getElementById('preview-hero');
+      let img = hero.querySelector('img');
+      if (!img) { img = document.createElement('img'); hero.prepend(img); }
+      img.src = inv.hero_photo;
+    }
+
+    // Three.js
+    if (threeCleanup) { threeCleanup(); threeCleanup = null; }
+    threeCleanup = initInvitationScene(document.getElementById('inv-canvas'), inv.ai_design_json);
+
+    // Design preview
+    if (inv.ai_design_json) {
+      const dp = document.getElementById('design-preview');
+      dp.style.display = 'block';
+      const palette = inv.ai_design_json.palette || {};
+      const colors = Object.values(palette);
+      document.getElementById('design-palette').innerHTML =
+        colors.map(c => `<div class="swatch" style="background:${c}" title="${c}"></div>`).join('') +
+        `<span style="margin-left:8px;font-size:13px;color:var(--text-muted)">${inv.ai_design_json.theme_mood || ''}</span>`;
+      document.getElementById('design-quote').textContent =
+        inv.ai_design_json.opening_quote || '';
+    }
+
+    // Publish section
+    renderPublishSection(inv);
+
+    // Stats
+    await loadStats(id);
+    await loadRSVP(id);
+
+    // Edit link
+    document.getElementById('btn-edit-inv').href = `create.html?id=${id}`;
+    document.getElementById('btn-go-publish').href = `publish.html?id=${id}`;
+
+  } catch(e) { toast(e.message, 'error'); }
+  finally { hideLoading(); }
+}
+
+function renderPublishSection(inv) {
+  const sec = document.getElementById('publish-section');
+  const actDiv = document.getElementById('publish-actions');
+
+  if (inv.status === 'published') {
+    sec.classList.add('published');
+    document.getElementById('publish-label').textContent = '● Sudah Dipublikasikan';
+    document.getElementById('publish-status-text').textContent = 'Undangan Anda sudah dapat diakses tamu';
+    const link = `${window.location.origin}/${inv.slug}`;
+    document.getElementById('publish-link-row').style.display = 'block';
+    document.getElementById('publish-link').textContent = link;
+    actDiv.innerHTML = `<a href="${link}" target="_blank" class="btn btn-gold btn-full">Buka Undangan →</a>`;
+  } else {
+    sec.classList.remove('published');
+    document.getElementById('publish-label').textContent = 'Belum Dipublikasikan';
+    document.getElementById('publish-status-text').textContent = 'Selesaikan pembayaran untuk mempublikasikan undangan';
+    document.getElementById('publish-link-row').style.display = 'none';
+    actDiv.innerHTML = `
+      <button class="btn btn-primary btn-full" id="btn-pay-publish">💳 Bayar & Publikasikan (Rp 99.000)</button>`;
+    document.getElementById('btn-pay-publish')?.addEventListener('click', async () => {
+      showLoading('Memproses pembayaran…');
+      try {
+        await api.post(`/invitation/${inv.id}/simulate-pay`);
+        await api.post(`/invitation/${inv.id}/publish`);
+        toast('Undangan berhasil dipublikasikan! 🎉', 'success');
+        await openDetail(inv.id);
+      } catch(e) { toast(e.message, 'error'); }
+      finally { hideLoading(); }
+    });
+  }
+}
+
+async function loadStats(id) {
+  try {
+    const guests   = await api.get(`/guest/${id}`).catch(() => []);
+    const rsvps    = await api.get(`/guest/rsvp/${id}`).catch(() => []);
+    const greetings = await api.get(`/guest/greetings/${id}`).catch(() => []);
+    document.getElementById('stat-guests').textContent = guests.length || 0;
+    document.getElementById('stat-rsvp').textContent   = rsvps.length || 0;
+    document.getElementById('stat-greet').textContent  = greetings.length || 0;
+  } catch(e) {}
+}
+
+async function loadRSVP(id) {
+  try {
+    const rsvps = await api.get(`/guest/rsvp/${id}`);
+    const el = document.getElementById('rsvp-list');
+    if (!rsvps.length) { el.innerHTML = '<div style="color:var(--text-dim);font-size:14px">Belum ada RSVP</div>'; return; }
+    el.innerHTML = rsvps.slice(0, 10).map(r => `
+      <div class="rsvp-item">
+        <div>
+          <div style="font-size:14px;color:var(--text)">${r.name}</div>
+          <div style="font-size:12px;color:var(--text-dim)">${r.attendance_count} orang · ${relativeTime(r.created_at)}</div>
+        </div>
+        <span class="status-pill status-${r.status}">${r.status === 'attending' ? 'Hadir' : r.status === 'not_attending' ? 'Tidak Hadir' : 'Mungkin'}</span>
+      </div>`).join('');
+  } catch(e) {}
+}
+
+// ── Action buttons ────────────────────────────────────────
+document.getElementById('btn-back-list').addEventListener('click', () => {
+  document.getElementById('detail-view').style.display = 'none';
+  document.getElementById('list-view').style.display = 'block';
+  if (threeCleanup) { threeCleanup(); threeCleanup = null; }
+  currentInv = null;
+});
+
+document.getElementById('btn-copy-link').addEventListener('click', () => {
+  const link = document.getElementById('publish-link').textContent;
+  navigator.clipboard.writeText(link).then(() => toast('Link disalin!', 'success'));
+});
+
+document.getElementById('btn-preview-live').addEventListener('click', () => {
+  if (!currentInv) return;
+  window.open(`../invitation/index.html?id=${currentInv.id}&preview=1`, '_blank');
+});
+
+document.getElementById('btn-regen-design').addEventListener('click', async () => {
+  if (!currentInv) return;
+  showLoading('AI merancang ulang undangan…');
+  try {
+    await api.post('/ai/generate-design', { invitation_id: currentInv.id });
+    toast('Desain berhasil diperbarui ✦', 'success');
+    await openDetail(currentInv.id);
+  } catch(e) { toast(e.message, 'error'); }
+  finally { hideLoading(); }
+});
+
+document.getElementById('btn-delete-inv').addEventListener('click', async () => {
+  if (!currentInv) return;
+  if (!confirm('Hapus undangan ini?')) return;
+  showLoading('Menghapus…');
+  try {
+    await api.delete(`/invitation/${currentInv.id}`);
+    toast('Undangan dihapus', 'success');
+    document.getElementById('btn-back-list').click();
+    loadList();
+  } catch(e) { toast(e.message, 'error'); }
+  finally { hideLoading(); }
+});
+
+// ── Init ─────────────────────────────────────────────────
+const urlId = new URLSearchParams(location.search).get('id');
+if (urlId) {
+  openDetail(parseInt(urlId));
+} else {
+  loadList();
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>nikahin – Beranda</title>
+<link rel="stylesheet" href="../assets/css/main.css">
+<style>
+  body { overflow-x: hidden; }
+  #canvas-bg {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  }
+  .landing-wrap {
+    position: relative; z-index: 1;
+    min-height: 100vh; padding: 0 0 80px;
+  }
+
+  /* Header */
+  .landing-header {
+    padding: 40px 24px 0;
+    display: flex; align-items: flex-start; justify-content: space-between;
+  }
+  .greeting-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 13px; color: var(--text-dim);
+  }
+  .greeting-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 24px; font-weight: 400; color: var(--text);
+  }
+  .brand-mark {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px; color: var(--gold); letter-spacing: 2px;
+  }
+
+  /* Hero */
+  .hero {
+    padding: 48px 24px 0;
+    text-align: center;
+  }
+  .hero-label {
+    display: inline-block;
+    font-size: 10px; letter-spacing: 4px; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 16px;
+    border: 1px solid rgba(201,169,110,.3); padding: 4px 16px; border-radius: 50px;
+  }
+  .hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 44px; font-weight: 300; line-height: 1.1;
+    color: var(--text); margin-bottom: 16px;
+  }
+  .hero-title em { color: var(--gold); font-style: italic; }
+  .hero-sub {
+    font-size: 14px; color: var(--text-muted); line-height: 1.7; max-width: 300px; margin: 0 auto;
+  }
+
+  /* Menu Grid */
+  .menu-section { padding: 48px 24px 0; }
+  .menu-label {
+    font-size: 10px; letter-spacing: 4px; text-transform: uppercase;
+    color: var(--text-dim); margin-bottom: 20px;
+  }
+  .menu-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .menu-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px 20px;
+    cursor: pointer; text-decoration: none;
+    transition: var(--transition);
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .menu-card::before {
+    content: ''; position: absolute; inset: 0;
+    opacity: 0; transition: opacity .3s;
+    background: radial-gradient(circle at 50% 0%, rgba(201,169,110,.08), transparent 70%);
+  }
+  .menu-card:hover::before { opacity: 1; }
+  .menu-card:hover { border-color: rgba(201,169,110,.3); transform: translateY(-3px); }
+  .menu-card.primary {
+    grid-column: 1/-1;
+    background: linear-gradient(135deg, rgba(109,40,217,.2), rgba(76,29,149,.1));
+    border-color: rgba(109,40,217,.3);
+    flex-direction: row; align-items: center;
+  }
+  .menu-card.primary:hover { border-color: var(--purple-lt); }
+  .menu-icon {
+    width: 44px; height: 44px;
+    background: var(--surface2); border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; border: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .menu-card.primary .menu-icon {
+    background: rgba(109,40,217,.2); border-color: rgba(109,40,217,.4); font-size: 24px;
+  }
+  .menu-content { flex: 1; }
+  .menu-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px; font-weight: 400; color: var(--text); margin-bottom: 4px;
+  }
+  .menu-card.primary .menu-title { font-size: 22px; }
+  .menu-desc { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+  .menu-arrow {
+    color: var(--text-dim); font-size: 18px; transition: var(--transition);
+  }
+  .menu-card:hover .menu-arrow { color: var(--gold); transform: translateX(4px); }
+  .menu-badge {
+    position: absolute; top: 12px; right: 12px;
+    font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 50px;
+    background: rgba(109,40,217,.2); color: var(--purple-lt); border: 1px solid rgba(109,40,217,.3);
+  }
+
+  /* Recent Invitations */
+  .recent-section { padding: 32px 24px 0; }
+  .inv-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    display: flex; align-items: center; gap: 14px;
+    text-decoration: none; color: inherit;
+    margin-bottom: 10px;
+    transition: var(--transition);
+  }
+  .inv-card:hover { border-color: rgba(201,169,110,.3); }
+  .inv-thumb {
+    width: 60px; height: 60px; border-radius: 10px;
+    background: var(--surface2); flex-shrink: 0;
+    border: 1px solid var(--border);
+    overflow: hidden; display: flex; align-items: center; justify-content: center;
+    color: var(--text-dim); font-size: 22px;
+  }
+  .inv-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .inv-names {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px; color: var(--text); margin-bottom: 4px;
+  }
+  .inv-date { font-size: 12px; color: var(--text-muted); }
+  .inv-status {
+    margin-left: auto; flex-shrink: 0;
+    font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 50px;
+  }
+  .inv-status.draft { background: rgba(250,204,21,.1); color: #fde047; border: 1px solid rgba(250,204,21,.2); }
+  .inv-status.published { background: rgba(34,197,94,.1); color: #4ade80; border: 1px solid rgba(34,197,94,.2); }
+</style>
+</head>
+<body>
+<canvas id="canvas-bg"></canvas>
+
+<div class="landing-wrap">
+  <div class="landing-header">
+    <div>
+      <div class="greeting-text">Selamat datang,</div>
+      <div class="greeting-name" id="user-greeting">—</div>
+    </div>
+    <div class="brand-mark">nikahin</div>
+  </div>
+
+  <div class="hero">
+    <span class="hero-label">✦ Platform Undangan Digital</span>
+    <h1 class="hero-title">
+      Undangan <em>Pernikahan</em><br>yang Berkesan
+    </h1>
+    <p class="hero-sub">Ciptakan undangan digital indah dengan sentuhan AI, animasi sinematik, dan fitur interaktif untuk tamu Anda.</p>
+  </div>
+
+  <div class="menu-section">
+    <div class="menu-label">Menu Utama</div>
+    <div class="menu-grid">
+      <a href="create.html" class="menu-card primary">
+        <div class="menu-icon">💍</div>
+        <div class="menu-content">
+          <div class="menu-title">Buat Undangan</div>
+          <div class="menu-desc">Rancang undangan indah dengan AI dalam beberapa langkah</div>
+        </div>
+        <div class="menu-arrow">→</div>
+        <span class="menu-badge">AI</span>
+      </a>
+
+      <a href="view.html" class="menu-card">
+        <div class="menu-icon">👁</div>
+        <div class="menu-content">
+          <div class="menu-title">Undangan Saya</div>
+          <div class="menu-desc">Lihat & kelola undangan</div>
+        </div>
+        <div class="menu-arrow">→</div>
+      </a>
+
+      <a href="#planner" class="menu-card" style="pointer-events:none;opacity:.4">
+        <div class="menu-icon">📋</div>
+        <div class="menu-content">
+          <div class="menu-title">Planner</div>
+          <div class="menu-desc">Segera hadir</div>
+        </div>
+        <span style="position:absolute;top:12px;right:12px;font-size:9px;background:rgba(255,255,255,.06);color:var(--text-dim);padding:2px 8px;border-radius:50px;">Soon</span>
+      </a>
+
+      <a href="#gallery" class="menu-card" style="pointer-events:none;opacity:.4">
+        <div class="menu-icon">🖼</div>
+        <div class="menu-content">
+          <div class="menu-title">Galeri</div>
+          <div class="menu-desc">Inspirasi tema</div>
+        </div>
+        <span style="position:absolute;top:12px;right:12px;font-size:9px;background:rgba(255,255,255,.06);color:var(--text-dim);padding:2px 8px;border-radius:50px;">Soon</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Recent Invitations -->
+  <div class="recent-section" id="recent-section" style="display:none">
+    <div class="menu-label">Undangan Terakhir</div>
+    <div id="inv-list"></div>
+  </div>
+</div>
+
+<!-- Bottom Nav -->
+<nav class="nav">
+  <a href="landing.html" class="nav-item active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+    Beranda
+  </a>
+  <a href="create.html" class="nav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    Buat
+  </a>
+  <a href="view.html" class="nav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+    Undangan
+  </a>
+  <a href="#" class="nav-item" id="btn-logout">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Keluar
+  </a>
+</nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/three-particles.js"></script>
+<script>
+  if (!Auth.check()) void 0;
+
+  // Greeting
+  const user = Auth.user();
+  document.getElementById('user-greeting').textContent = user ? user.name.split(' ')[0] : 'Tamu';
+
+  // Logout
+  document.getElementById('btn-logout').addEventListener('click', e => {
+    e.preventDefault();
+    Auth.clear();
+    window.location = 'login.html';
+  });
+
+  // Load recent invitations
+  (async () => {
+    try {
+      const invs = await api.get('/invitation');
+      if (invs && invs.length) {
+        const section = document.getElementById('recent-section');
+        const list = document.getElementById('inv-list');
+        section.style.display = 'block';
+        invs.slice(0, 3).forEach(inv => {
+          const card = document.createElement('a');
+          card.href = `view.html?id=${inv.id}`;
+          card.className = 'inv-card';
+          card.innerHTML = `
+            <div class="inv-thumb">${inv.hero_photo ? `<img src="${inv.hero_photo}">` : '💍'}</div>
+            <div class="flex-1">
+              <div class="inv-names">${inv.groom_name} & ${inv.bride_name}</div>
+              <div class="inv-date">${formatDate(inv.wedding_date)}</div>
+            </div>
+            <div class="inv-status ${inv.status}">${inv.status === 'published' ? 'Published' : 'Draft'}</div>`;
+          list.appendChild(card);
+        });
+      }
+    } catch(e) {}
+  })();
+
+  // Init Three.js
+  initParticles(document.getElementById('canvas-bg'));
+</script>
+</body>
+</html>

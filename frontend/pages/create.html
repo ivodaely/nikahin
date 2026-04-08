@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>nikahin – Buat Undangan</title>
+<link rel="stylesheet" href="../assets/css/main.css">
+<style>
+  .create-wrap { min-height: 100vh; padding-bottom: 120px; }
+
+  /* Step panels */
+  .step-panel { display: none; padding: 24px 24px 0; animation: fadeSlideUp .35s ease; }
+  .step-panel.active { display: block; }
+
+  /* Step header */
+  .step-header { margin-bottom: 28px; }
+  .step-num {
+    font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--text-dim); margin-bottom: 6px;
+  }
+  .step-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 30px; font-weight: 400; color: var(--text); line-height: 1.2;
+  }
+  .step-sub { font-size: 13px; color: var(--text-muted); margin-top: 6px; line-height: 1.5; }
+
+  /* Photo grid */
+  .photo-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .photo-sq { aspect-ratio: 1; }
+
+  /* Theme cards */
+  .theme-elegant .theme-card-preview { background: linear-gradient(135deg,#1a0d2e,#0d0a14); }
+  .theme-floral  .theme-card-preview { background: linear-gradient(135deg,#1a0d1a,#2d1a0d); }
+  .theme-modern  .theme-card-preview { background: linear-gradient(135deg,#0d1a2e,#0a1410); }
+
+  .theme-card-preview::after {
+    content: attr(data-label);
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px; color: rgba(201,169,110,.5);
+    letter-spacing: 2px;
+  }
+
+  /* Bank card */
+  .bank-card {
+    background: linear-gradient(135deg,var(--surface2),#1a1225);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px; margin-bottom: 16px;
+  }
+  .bank-label { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 4px; }
+  .bank-value { font-family: 'Cormorant Garamond', serif; font-size: 20px; color: var(--text); }
+
+  /* AI prompt area */
+  .ai-prompt-wrap {
+    background: rgba(109,40,217,.06);
+    border: 1px solid rgba(109,40,217,.2);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+  .ai-prompt-header {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+  }
+
+  /* Photo prompt result */
+  .photo-prompt-box {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 16px;
+    font-size: 14px; color: var(--text-muted); line-height: 1.7;
+    font-style: italic; display: none; margin-top: 12px;
+  }
+
+  /* Step nav buttons */
+  .step-nav {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 480px;
+    padding: 16px 24px max(16px, env(safe-area-inset-bottom));
+    background: rgba(13,10,20,.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    display: flex; gap: 12px; z-index: 100;
+  }
+  .step-nav-prev { flex-shrink: 0; }
+  .step-nav-next { flex: 1; }
+
+  /* Generate confirmation */
+  .generate-card {
+    background: linear-gradient(135deg,rgba(109,40,217,.15),rgba(76,29,149,.08));
+    border: 1px solid rgba(109,40,217,.3);
+    border-radius: var(--radius); padding: 24px;
+    text-align: center; margin-bottom: 20px;
+  }
+  .generate-icon { font-size: 48px; margin-bottom: 12px; }
+  .generate-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 24px; color: var(--text); margin-bottom: 8px;
+  }
+  .generate-sub { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+
+  .summary-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .summary-row:last-child { border: none; }
+  .summary-key { color: var(--text-muted); }
+  .summary-val { color: var(--text); font-weight: 400; text-align: right; max-width: 60%; }
+</style>
+</head>
+<body>
+<div class="create-wrap">
+  <!-- Top Bar -->
+  <div class="topbar">
+    <a href="landing.html" class="topbar-back">←</a>
+    <div class="topbar-title">Buat Undangan</div>
+    <div style="width:36px"></div>
+  </div>
+
+  <!-- Step Progress Dots -->
+  <div class="step-progress" id="step-progress"></div>
+
+  <!-- ── STEP 1: Names ── -->
+  <div class="step-panel active" data-step="1">
+    <div class="step-header">
+      <div class="step-num">Langkah 1 dari 10</div>
+      <h2 class="step-title">Nama Pengantin</h2>
+      <p class="step-sub">Masukkan nama lengkap pengantin pria dan wanita.</p>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nama Pengantin Pria</label>
+      <input id="groom_name" type="text" class="form-control" placeholder="Contoh: Ahmad Rizki">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nama Pengantin Wanita</label>
+      <input id="bride_name" type="text" class="form-control" placeholder="Contoh: Siti Rahayu">
+    </div>
+  </div>
+
+  <!-- ── STEP 2: Wedding Date ── -->
+  <div class="step-panel" data-step="2">
+    <div class="step-header">
+      <div class="step-num">Langkah 2 dari 10</div>
+      <h2 class="step-title">Tanggal & Waktu Pernikahan</h2>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tanggal Pernikahan</label>
+      <input id="wedding_date" type="date" class="form-control">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Waktu Mulai</label>
+      <input id="wedding_time" type="time" class="form-control" value="10:00">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nama Tempat</label>
+      <input id="venue_name" type="text" class="form-control" placeholder="Contoh: Ballroom Grand Hotel Jakarta">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Alamat Lengkap</label>
+      <textarea id="venue_address" class="form-control" placeholder="Jl. Contoh No. 1, Jakarta Selatan"></textarea>
+    </div>
+  </div>
+
+  <!-- ── STEP 3: Groom Info ── -->
+  <div class="step-panel" data-step="3">
+    <div class="step-header">
+      <div class="step-num">Langkah 3 dari 10</div>
+      <h2 class="step-title">Info Pengantin Pria</h2>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nama Ayah</label>
+      <input id="groom_father" type="text" class="form-control" placeholder="Nama ayah pengantin pria">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nama Ibu</label>
+      <input id="groom_mother" type="text" class="form-control" placeholder="Nama ibu pengantin pria">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Warna Favorit</label>
+      <div style="display:flex;gap:10px;align-items:center">
+        <input id="groom_color" type="color" style="width:48px;height:48px;border:none;background:none;cursor:pointer;padding:0;border-radius:8px;flex-shrink:0" value="#6d28d9">
+        <input id="groom_color_text" type="text" class="form-control" placeholder="#6d28d9" style="font-family:monospace">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Agama</label>
+      <select id="groom_religion" class="form-control">
+        <option value="">Pilih agama</option>
+        <option value="Islam">Islam</option>
+        <option value="Kristen">Kristen</option>
+        <option value="Katolik">Katolik</option>
+        <option value="Hindu">Hindu</option>
+        <option value="Buddha">Buddha</option>
+        <option value="Konghucu">Konghucu</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label" style="display:flex;justify-content:space-between">
+        <span>Profil Singkat</span>
+        <button id="btn-ai-groom-bio" class="ai-badge" style="cursor:pointer;border:none;font-family:inherit">✦ Tulis dengan AI</button>
+      </label>
+      <textarea id="groom_bio" class="form-control" placeholder="Ceritakan sedikit tentang pengantin pria..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Foto Pengantin Pria</label>
+      <div class="photo-upload photo-sq" id="upload-groom">
+        <div class="photo-upload-icon">📷</div>
+        <div class="photo-upload-label">Tap untuk upload foto</div>
+        <input type="file" accept="image/*">
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 4: Bride Info ── -->
+  <div class="step-panel" data-step="4">
+    <div class="step-header">
+      <div class="step-num">Langkah 4 dari 10</div>
+      <h2 class="step-title">Info Pengantin Wanita</h2>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nama Ayah</label>
+      <input id="bride_father" type="text" class="form-control" placeholder="Nama ayah pengantin wanita">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nama Ibu</label>
+      <input id="bride_mother" type="text" class="form-control" placeholder="Nama ibu pengantin wanita">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Warna Favorit</label>
+      <div style="display:flex;gap:10px;align-items:center">
+        <input id="bride_color" type="color" style="width:48px;height:48px;border:none;background:none;cursor:pointer;padding:0;border-radius:8px;flex-shrink:0" value="#d4687a">
+        <input id="bride_color_text" type="text" class="form-control" placeholder="#d4687a" style="font-family:monospace">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Agama</label>
+      <select id="bride_religion" class="form-control">
+        <option value="">Pilih agama</option>
+        <option value="Islam">Islam</option>
+        <option value="Kristen">Kristen</option>
+        <option value="Katolik">Katolik</option>
+        <option value="Hindu">Hindu</option>
+        <option value="Buddha">Buddha</option>
+        <option value="Konghucu">Konghucu</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label" style="display:flex;justify-content:space-between">
+        <span>Profil Singkat</span>
+        <button id="btn-ai-bride-bio" class="ai-badge" style="cursor:pointer;border:none;font-family:inherit">✦ Tulis dengan AI</button>
+      </label>
+      <textarea id="bride_bio" class="form-control" placeholder="Ceritakan sedikit tentang pengantin wanita..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Foto Pengantin Wanita</label>
+      <div class="photo-upload photo-sq" id="upload-bride">
+        <div class="photo-upload-icon">📷</div>
+        <div class="photo-upload-label">Tap untuk upload foto</div>
+        <input type="file" accept="image/*">
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 5: Theme ── -->
+  <div class="step-panel" data-step="5">
+    <div class="step-header">
+      <div class="step-num">Langkah 5 dari 10</div>
+      <h2 class="step-title">Pilih Tema</h2>
+      <p class="step-sub">Tentukan nuansa visual undangan Anda.</p>
+    </div>
+    <div class="theme-grid">
+      <div class="theme-card theme-elegant selected" data-theme="elegant">
+        <div class="theme-card-preview" data-label="Elegant"></div>
+        <div class="theme-card-name">Elegant</div>
+      </div>
+      <div class="theme-card theme-floral" data-theme="floral">
+        <div class="theme-card-preview" data-label="Floral"></div>
+        <div class="theme-card-name">Floral</div>
+      </div>
+      <div class="theme-card theme-modern" data-theme="modern">
+        <div class="theme-card-preview" data-label="Modern"></div>
+        <div class="theme-card-name">Modern</div>
+      </div>
+      <div class="theme-card" data-theme="royal" style="opacity:.4;pointer-events:none">
+        <div class="theme-card-preview" style="background:linear-gradient(135deg,#1a0d0d,#1a1a0d)" data-label="Royal"></div>
+        <div class="theme-card-name">Royal <small style="color:var(--text-dim)">(Soon)</small></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 6: Bank Account ── -->
+  <div class="step-panel" data-step="6">
+    <div class="step-header">
+      <div class="step-num">Langkah 6 dari 10</div>
+      <h2 class="step-title">Rekening Hadiah</h2>
+      <p class="step-sub">Tambahkan rekening untuk hadiah uang dari tamu. (Opsional)</p>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nama Bank</label>
+      <input id="bank_name" type="text" class="form-control" placeholder="Contoh: BCA, Mandiri, BNI">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nomor Rekening</label>
+      <input id="bank_account" type="text" class="form-control" placeholder="Nomor rekening">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nama Pemilik Rekening</label>
+      <input id="bank_holder" type="text" class="form-control" placeholder="Sesuai nama di rekening">
+    </div>
+    <div class="bank-card" id="bank-preview" style="display:none">
+      <div class="bank-label">Preview Kartu Hadiah</div>
+      <div class="bank-value" id="bank-preview-holder">—</div>
+      <div style="margin-top:8px;font-size:13px;color:var(--text-muted)" id="bank-preview-info">—</div>
+    </div>
+  </div>
+
+  <!-- ── STEP 7: AI Design Prompt ── -->
+  <div class="step-panel" data-step="7">
+    <div class="step-header">
+      <div class="step-num">Langkah 7 dari 10</div>
+      <h2 class="step-title">Deskripsikan Gaya Anda</h2>
+      <p class="step-sub">Ceritakan kepada AI bagaimana tampilan undangan yang Anda impikan.</p>
+    </div>
+    <div class="ai-prompt-wrap">
+      <div class="ai-prompt-header">
+        <span class="ai-badge">✦ AI Design</span>
+        <span style="font-size:12px;color:var(--text-dim)">Powered by Claude</span>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <textarea id="ai_prompt" class="form-control" rows="5"
+          placeholder="Contoh: Saya ingin nuansa romantic dan elegan dengan warna gold dan putih gading. Ada sentuhan Jawa klasik dengan ornamen batik halus. Tidak terlalu banyak teks, lebih banyak visual..."></textarea>
+      </div>
+    </div>
+    <div style="margin-top:16px;padding:12px 14px;background:var(--surface2);border-radius:var(--radius-sm);border:1px solid var(--border)">
+      <div style="font-size:12px;color:var(--text-dim);line-height:1.6">
+        💡 <strong style="color:var(--text-muted)">Tips:</strong>
+        Sebutkan warna favorit, suasana (romantic, modern, tradisional, minimalist), 
+        ornamen (bunga, geometrik, batik), dan referensi apapun yang membantu AI merancang untuk Anda.
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 8: Reference Images ── -->
+  <div class="step-panel" data-step="8">
+    <div class="step-header">
+      <div class="step-num">Langkah 8 dari 10</div>
+      <h2 class="step-title">Gambar Referensi</h2>
+      <p class="step-sub">Upload logo, simbol, atau referensi visual. (Opsional)</p>
+    </div>
+    <div class="photo-row">
+      <div class="photo-upload" id="upload-ref1" style="aspect-ratio:1">
+        <div class="photo-upload-icon">🖼</div>
+        <div class="photo-upload-label">Referensi 1</div>
+        <input type="file" accept="image/*">
+      </div>
+      <div class="photo-upload" id="upload-ref2" style="aspect-ratio:1">
+        <div class="photo-upload-icon">🖼</div>
+        <div class="photo-upload-label">Referensi 2</div>
+        <input type="file" accept="image/*">
+      </div>
+      <div class="photo-upload" id="upload-ref3" style="aspect-ratio:1">
+        <div class="photo-upload-icon">🖼</div>
+        <div class="photo-upload-label">Referensi 3</div>
+        <input type="file" accept="image/*">
+      </div>
+      <div class="photo-upload" id="upload-ref4" style="aspect-ratio:1">
+        <div class="photo-upload-icon">🖼</div>
+        <div class="photo-upload-label">Referensi 4</div>
+        <input type="file" accept="image/*">
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 9: Pre-wedding Photos ── -->
+  <div class="step-panel" data-step="9">
+    <div class="step-header">
+      <div class="step-num">Langkah 9 dari 10</div>
+      <h2 class="step-title">Foto Prewedding</h2>
+      <p class="step-sub">Upload foto prewedding Anda, atau biarkan AI menggambarkan skenanya untuk Anda.</p>
+    </div>
+    <div style="margin-bottom:16px">
+      <div class="photo-upload" id="upload-hero" style="aspect-ratio:16/9">
+        <div class="photo-upload-icon">💏</div>
+        <div class="photo-upload-label">Upload Foto Cover Utama</div>
+        <input type="file" accept="image/*">
+      </div>
+    </div>
+    <div class="photo-row">
+      <div class="photo-upload" id="upload-pw1" style="aspect-ratio:1"><div class="photo-upload-icon">📸</div><div class="photo-upload-label">Foto 2</div><input type="file" accept="image/*"></div>
+      <div class="photo-upload" id="upload-pw2" style="aspect-ratio:1"><div class="photo-upload-icon">📸</div><div class="photo-upload-label">Foto 3</div><input type="file" accept="image/*"></div>
+      <div class="photo-upload" id="upload-pw3" style="aspect-ratio:1"><div class="photo-upload-icon">📸</div><div class="photo-upload-label">Foto 4</div><input type="file" accept="image/*"></div>
+      <div class="photo-upload" id="upload-pw4" style="aspect-ratio:1"><div class="photo-upload-icon">📸</div><div class="photo-upload-label">Foto 5</div><input type="file" accept="image/*"></div>
+    </div>
+    <div style="margin-top:20px">
+      <button id="btn-ai-photo" class="btn btn-ghost btn-full">
+        <span>✦</span> Tidak punya foto? Generate deskripsi dengan AI
+      </button>
+      <div class="photo-prompt-box" id="photo-prompt-box"></div>
+    </div>
+  </div>
+
+  <!-- ── STEP 10: Review & Generate ── -->
+  <div class="step-panel" data-step="10">
+    <div class="step-header">
+      <div class="step-num">Langkah 10 dari 10</div>
+      <h2 class="step-title">Simpan & Generate</h2>
+      <p class="step-sub">Tinjau ringkasan undangan Anda, lalu biarkan AI merancang undangan indah untuk Anda.</p>
+    </div>
+
+    <div class="generate-card">
+      <div class="generate-icon">✨</div>
+      <div class="generate-title">Siap untuk Dirancang</div>
+      <div class="generate-sub">Claude AI akan membuat desain undangan yang dipersonalisasi berdasarkan semua informasi yang Anda berikan.</div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div id="summary-content">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Step Nav -->
+<div class="step-nav">
+  <button class="btn btn-ghost step-nav-prev" id="btn-prev" style="display:none">← Kembali</button>
+  <button class="btn btn-primary step-nav-next" id="btn-next">Lanjut →</button>
+</div>
+
+<script src="../assets/js/main.js"></script>
+<script>
+if (!Auth.check()) void 0;
+
+// ── State ────────────────────────────────────────────────
+const state = {
+  step: 1, totalSteps: 10,
+  invitationId: null,
+  groom_name:'', bride_name:'',
+  wedding_date:'', wedding_time:'10:00',
+  venue_name:'', venue_address:'',
+  groom_father:'', groom_mother:'', groom_color:'#6d28d9', groom_religion:'', groom_bio:'', groom_photo:'',
+  bride_father:'', bride_mother:'', bride_color:'#d4687a', bride_religion:'', bride_bio:'', bride_photo:'',
+  theme:'elegant',
+  bank_name:'', bank_account:'', bank_holder:'',
+  ai_prompt:'', reference_images:[], hero_photo:'', prewedding_photos:[],
+};
+
+// ── Progress bar ─────────────────────────────────────────
+function renderProgress() {
+  const pg = document.getElementById('step-progress');
+  pg.innerHTML = '';
+  for (let i = 1; i <= state.totalSteps; i++) {
+    const d = document.createElement('div');
+    d.className = `step-dot ${i < state.step ? 'done' : i === state.step ? 'active' : ''}`;
+    pg.appendChild(d);
+  }
+}
+
+// ── Show step ─────────────────────────────────────────────
+function showStep(n) {
+  document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+  const panel = document.querySelector(`[data-step="${n}"]`);
+  if (panel) { panel.classList.add('active'); panel.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  document.getElementById('btn-prev').style.display = n === 1 ? 'none' : '';
+  const nextBtn = document.getElementById('btn-next');
+  nextBtn.textContent = n === state.totalSteps ? '✨ Simpan & Generate' : 'Lanjut →';
+  if (n === state.totalSteps) renderSummary();
+  renderProgress();
+}
+
+// ── Collect from current step ─────────────────────────────
+function collectStep(n) {
+  const g = id => document.getElementById(id)?.value?.trim() || '';
+  switch (n) {
+    case 1:
+      state.groom_name = g('groom_name');
+      state.bride_name = g('bride_name');
+      if (!state.groom_name || !state.bride_name) { toast('Nama pengantin wajib diisi', 'error'); return false; }
+      break;
+    case 2:
+      state.wedding_date    = g('wedding_date');
+      state.wedding_time    = g('wedding_time') || '10:00';
+      state.venue_name      = g('venue_name');
+      state.venue_address   = g('venue_address');
+      if (!state.wedding_date) { toast('Tanggal pernikahan wajib diisi', 'error'); return false; }
+      break;
+    case 3:
+      state.groom_father   = g('groom_father');
+      state.groom_mother   = g('groom_mother');
+      state.groom_color    = g('groom_color_text') || document.getElementById('groom_color')?.value;
+      state.groom_religion = g('groom_religion');
+      state.groom_bio      = g('groom_bio');
+      break;
+    case 4:
+      state.bride_father   = g('bride_father');
+      state.bride_mother   = g('bride_mother');
+      state.bride_color    = g('bride_color_text') || document.getElementById('bride_color')?.value;
+      state.bride_religion = g('bride_religion');
+      state.bride_bio      = g('bride_bio');
+      break;
+    case 5:
+      state.theme = document.querySelector('.theme-card.selected')?.dataset.theme || 'elegant';
+      break;
+    case 6:
+      state.bank_name    = g('bank_name');
+      state.bank_account = g('bank_account');
+      state.bank_holder  = g('bank_holder');
+      break;
+    case 7:
+      state.ai_prompt = g('ai_prompt');
+      break;
+  }
+  return true;
+}
+
+// ── Summary ──────────────────────────────────────────────
+function renderSummary() {
+  const rows = [
+    ['Pengantin Pria', state.groom_name],
+    ['Pengantin Wanita', state.bride_name],
+    ['Tanggal', state.wedding_date ? formatDate(state.wedding_date) : '—'],
+    ['Waktu', formatTime(state.wedding_time)],
+    ['Tempat', state.venue_name || '—'],
+    ['Tema', state.theme],
+    ['Rekening', state.bank_account ? `${state.bank_name} – ${state.bank_account}` : '—'],
+  ];
+  document.getElementById('summary-content').innerHTML = rows.map(([k,v]) =>
+    `<div class="summary-row"><span class="summary-key">${k}</span><span class="summary-val">${v}</span></div>`
+  ).join('');
+}
+
+// ── Next / Prev ───────────────────────────────────────────
+document.getElementById('btn-next').addEventListener('click', async () => {
+  if (!collectStep(state.step)) return;
+
+  if (state.step === state.totalSteps) {
+    await saveAndGenerate();
+    return;
+  }
+  state.step++;
+  showStep(state.step);
+});
+
+document.getElementById('btn-prev').addEventListener('click', () => {
+  if (state.step > 1) { state.step--; showStep(state.step); }
+});
+
+// ── Save & Generate ──────────────────────────────────────
+async function saveAndGenerate() {
+  showLoading('Menyimpan undangan…');
+  try {
+    const payload = { ...state };
+    delete payload.step; delete payload.totalSteps;
+
+    let inv;
+    if (state.invitationId) {
+      inv = await api.put(`/invitation/${state.invitationId}`, payload);
+    } else {
+      inv = await api.post('/invitation', payload);
+      state.invitationId = inv.id;
+    }
+
+    showLoading('AI sedang merancang undangan Anda…');
+    const design = await api.post('/ai/generate-design', { invitation_id: inv.id });
+
+    toast('Undangan berhasil dibuat! 🎉', 'success');
+    setTimeout(() => { window.location = `view.html?id=${inv.id}`; }, 1200);
+  } catch(err) {
+    toast(err.message, 'error');
+    hideLoading();
+  }
+}
+
+// ── Theme selection ───────────────────────────────────────
+document.querySelectorAll('.theme-card[data-theme]').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    state.theme = card.dataset.theme;
+  });
+});
+
+// ── Color pickers sync ────────────────────────────────────
+['groom','bride'].forEach(role => {
+  const picker = document.getElementById(`${role}_color`);
+  const text   = document.getElementById(`${role}_color_text`);
+  if (!picker || !text) return;
+  picker.addEventListener('input', () => { text.value = picker.value; });
+  text.addEventListener('input', () => { if (/^#[0-9a-f]{6}$/i.test(text.value)) picker.value = text.value; });
+  text.value = picker.value;
+});
+
+// ── Bank preview ─────────────────────────────────────────
+['bank_name','bank_account','bank_holder'].forEach(id => {
+  document.getElementById(id)?.addEventListener('input', () => {
+    const name = document.getElementById('bank_holder').value.trim();
+    const num  = document.getElementById('bank_account').value.trim();
+    const bank = document.getElementById('bank_name').value.trim();
+    const preview = document.getElementById('bank-preview');
+    if (name || num || bank) {
+      preview.style.display = 'block';
+      document.getElementById('bank-preview-holder').textContent = name || '—';
+      document.getElementById('bank-preview-info').textContent = bank ? `${bank} · ${num}` : num || '—';
+    }
+  });
+});
+
+// ── Photo uploads ─────────────────────────────────────────
+initPhotoUpload('upload-groom', url => { state.groom_photo = url; });
+initPhotoUpload('upload-bride', url => { state.bride_photo = url; });
+initPhotoUpload('upload-hero',  url => { state.hero_photo  = url; });
+
+const refs = [];
+['upload-ref1','upload-ref2','upload-ref3','upload-ref4'].forEach((id, i) => {
+  initPhotoUpload(id, url => { refs[i] = url; state.reference_images = refs.filter(Boolean); });
+});
+
+const pws = [];
+['upload-pw1','upload-pw2','upload-pw3','upload-pw4'].forEach((id, i) => {
+  initPhotoUpload(id, url => { pws[i] = url; state.prewedding_photos = pws.filter(Boolean); });
+});
+
+// ── AI Bio ────────────────────────────────────────────────
+async function generateBio(role) {
+  const name  = document.getElementById(`${role}_name`)?.value.trim()
+             || (role === 'groom' ? state.groom_name : state.bride_name);
+  const facts = document.getElementById(`${role}_bio`)?.value.trim() || '';
+  if (!name) { toast('Isi nama pengantin terlebih dahulu', 'error'); return; }
+  showLoading('AI menulis profil…');
+  try {
+    const res = await api.post('/ai/generate-bio', { name, facts, role });
+    document.getElementById(`${role}_bio`).value = res.bio;
+    toast('Profil berhasil ditulis AI ✦', 'success');
+  } catch(e) { toast(e.message,'error'); }
+  finally { hideLoading(); }
+}
+document.getElementById('btn-ai-groom-bio')?.addEventListener('click', () => generateBio('groom'));
+document.getElementById('btn-ai-bride-bio')?.addEventListener('click', () => generateBio('bride'));
+
+// ── AI Photo prompt ───────────────────────────────────────
+document.getElementById('btn-ai-photo')?.addEventListener('click', async () => {
+  if (!state.groom_name || !state.bride_name) { toast('Isi nama pengantin terlebih dahulu (Langkah 1)', 'error'); return; }
+  showLoading('AI menulis deskripsi foto…');
+  try {
+    const res = await api.post('/ai/generate-photo-prompt', {
+      groom_name: state.groom_name, bride_name: state.bride_name, theme: state.theme
+    });
+    const box = document.getElementById('photo-prompt-box');
+    box.textContent = res.prompt;
+    box.style.display = 'block';
+    toast('Deskripsi foto dihasilkan ✦', 'success');
+  } catch(e) { toast(e.message,'error'); }
+  finally { hideLoading(); }
+});
+
+// ── Init ─────────────────────────────────────────────────
+// Pre-fill wedding date with today+30days
+const d = new Date(); d.setDate(d.getDate() + 30);
+document.getElementById('wedding_date').value = d.toISOString().slice(0,10);
+document.getElementById('wedding_date').min = new Date().toISOString().slice(0,10);
+
+renderProgress();
+showStep(1);
+</script>
+</body>
+</html>
