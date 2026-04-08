@@ -31,12 +31,39 @@ function base64url_decode(string $data): string {
     return base64_decode(strtr($data, '-_', '+/') . str_repeat('=', (4 - strlen($data) % 4) % 4));
 }
 
-function auth_user(): ?array {
-    $h = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
-    if (str_starts_with($h, 'Bearer ')) {
-        return jwt_decode(substr($h, 7));
+function get_bearer_token(): ?string {
+    // Apache on macOS/XAMPP often strips the Authorization header.
+    // Check every place it might end up, in order of reliability.
+    $candidates = [
+        $_SERVER['HTTP_AUTHORIZATION']          ?? '',  // standard
+        $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '',  // after mod_rewrite redirect
+        $_SERVER['HTTP_X_AUTHORIZATION']        ?? '',  // some proxy setups
+    ];
+
+    // Also try getallheaders() — works on some Apache+PHP-FPM setups
+    if (function_exists('getallheaders')) {
+        $hdrs = getallheaders();
+        // Header names are case-insensitive
+        foreach ($hdrs as $k => $v) {
+            if (strtolower($k) === 'authorization') {
+                $candidates[] = $v;
+                break;
+            }
+        }
     }
+
+    foreach ($candidates as $h) {
+        if (str_starts_with($h, 'Bearer ')) {
+            return substr($h, 7);
+        }
+    }
+
     return null;
+}
+
+function auth_user(): ?array {
+    $token = get_bearer_token();
+    return $token ? jwt_decode($token) : null;
 }
 
 function require_auth(): array {

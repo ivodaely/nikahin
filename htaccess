@@ -1,0 +1,28 @@
+Options -Indexes
+RewriteEngine On
+
+# ── CRITICAL: Pass Authorization header through to PHP ───────────
+# Apache on macOS/XAMPP strips this header by default.
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+# Allow real files and folders to pass through
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Route any request containing /api/ → backend/index.php
+RewriteCond %{REQUEST_URI} /api/
+RewriteRule ^ backend/index.php [QSA,L]
+
+# Public invitation slugs → invitation viewer
+RewriteCond %{REQUEST_URI} !^.*/(frontend|backend|uploads|assets)/
+RewriteRule ^([a-z0-9-]+)/?$ frontend/invitation/index.html [QSA,L]
+
+# Security headers
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+</IfModule>
+
+# Never leak PHP errors as HTML into API responses
+php_flag display_errors Off
+php_flag log_errors On
