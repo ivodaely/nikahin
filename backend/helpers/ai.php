@@ -17,13 +17,12 @@ function claude_request(string $model, string $system, string $userMsg, int $max
         CURLOPT_POST           => true,
         CURLOPT_POSTFIELDS     => $payload,
         CURLOPT_HTTPHEADER     => [
-            'x-api-key: '          . ANTHROPIC_API_KEY,
-            'anthropic-version: '  . ANTHROPIC_VERSION,
+            'x-api-key: '         . ANTHROPIC_API_KEY,
+            'anthropic-version: ' . ANTHROPIC_VERSION,
             'Content-Type: application/json',
         ],
         CURLOPT_TIMEOUT        => 60,
-        // XAMPP on macOS has no trusted CA bundle — disable SSL peer verification
-        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_SSL_VERIFYPEER => false,  // XAMPP macOS has no CA bundle
         CURLOPT_SSL_VERIFYHOST => false,
     ]);
 
@@ -76,9 +75,8 @@ SYS;
     $raw = claude_request(AI_MODEL_FAST, $system, $msg, 600);
     if (!$raw) return null;
 
-    // Strip markdown fences if model accidentally wraps in ```json
-    $raw = preg_replace('/^```(?:json)?\s*/i', '', trim($raw));
-    $raw = preg_replace('/```\s*$/i', '', $raw);
+    $raw    = preg_replace('/^```(?:json)?\s*/i', '', trim($raw));
+    $raw    = preg_replace('/```\s*$/i', '', $raw);
     $result = json_decode(trim($raw), true);
 
     if (!$result) {

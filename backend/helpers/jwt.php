@@ -5,11 +5,11 @@ define('JWT_SECRET', getenv('JWT_SECRET') ?: 'nikahin_secret_change_in_productio
 define('JWT_EXPIRY', 60 * 60 * 24 * 7); // 7 days
 
 function jwt_encode(array $payload): string {
-    $header  = base64url_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
-    $payload['exp'] = time() + JWT_EXPIRY;
-    $payload['iat'] = time();
-    $body    = base64url_encode(json_encode($payload));
-    $sig     = base64url_encode(hash_hmac('sha256', "$header.$body", JWT_SECRET, true));
+    $header          = base64url_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
+    $payload['exp']  = time() + JWT_EXPIRY;
+    $payload['iat']  = time();
+    $body            = base64url_encode(json_encode($payload));
+    $sig             = base64url_encode(hash_hmac('sha256', "$header.$body", JWT_SECRET, true));
     return "$header.$body.$sig";
 }
 
@@ -27,24 +27,21 @@ function jwt_decode(string $token): ?array {
 function base64url_encode(string $data): string {
     return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
 }
+
 function base64url_decode(string $data): string {
     return base64_decode(strtr($data, '-_', '+/') . str_repeat('=', (4 - strlen($data) % 4) % 4));
 }
 
 function get_bearer_token(): ?string {
-    // Apache on macOS/XAMPP often strips the Authorization header.
-    // Check every place it might end up, in order of reliability.
+    // Apache on macOS strips Authorization header — check all possible locations
     $candidates = [
-        $_SERVER['HTTP_AUTHORIZATION']          ?? '',  // standard
-        $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '',  // after mod_rewrite redirect
-        $_SERVER['HTTP_X_AUTHORIZATION']        ?? '',  // some proxy setups
+        $_SERVER['HTTP_AUTHORIZATION']          ?? '',
+        $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '',
+        $_SERVER['HTTP_X_AUTHORIZATION']        ?? '',
     ];
 
-    // Also try getallheaders() — works on some Apache+PHP-FPM setups
     if (function_exists('getallheaders')) {
-        $hdrs = getallheaders();
-        // Header names are case-insensitive
-        foreach ($hdrs as $k => $v) {
+        foreach (getallheaders() as $k => $v) {
             if (strtolower($k) === 'authorization') {
                 $candidates[] = $v;
                 break;
@@ -57,7 +54,6 @@ function get_bearer_token(): ?string {
             return substr($h, 7);
         }
     }
-
     return null;
 }
 

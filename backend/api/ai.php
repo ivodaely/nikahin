@@ -4,7 +4,7 @@
 // ── Set your Anthropic API key here ──────────────────────────────────────────
 // Get your key from: https://console.anthropic.com/
 // Replace the string below with your actual key (starts with sk-ant-...)
-define('ANTHROPIC_API_KEY',  getenv('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') ?: 'sk-ant-PASTE_YOUR_KEY_HERE');
+define('ANTHROPIC_API_KEY',  getenv('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');
 
 define('ANTHROPIC_API_URL',  'https://api.anthropic.com/v1/messages');
 define('ANTHROPIC_VERSION',  '2023-06-01');
