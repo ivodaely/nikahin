@@ -1,12 +1,15 @@
 <?php
 // backend/index.php
 
-// ── Must be FIRST: buffer all output so PHP notices/warnings never corrupt JSON
+// Must be FIRST: buffer all output so PHP notices/warnings never corrupt JSON
 ob_start();
 ini_set('display_errors', '0');
 ini_set('display_startup_errors', '0');
 ini_set('log_errors', '1');
 error_reporting(E_ALL);
+
+// AI calls to Anthropic can take 10-30 seconds — extend execution time
+set_time_limit(120);
 
 define('APP_URL', getenv('APP_URL') ?: 'http://localhost');
 

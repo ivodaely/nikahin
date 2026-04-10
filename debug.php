@@ -1,25 +1,42 @@
 <?php
 // TEMPORARY DEBUG FILE — delete after fixing!
+set_time_limit(120);  // give it 2 minutes
 ini_set('display_errors', '1');
 error_reporting(E_ALL);
+header('Content-Type: text/plain');
+// Flush output immediately so we see each step in real time
+ob_implicit_flush(true);
+if (ob_get_level()) ob_end_flush();
 
 require_once __DIR__ . '/backend/config/ai.php';
+require_once __DIR__ . '/backend/config/database.php';
 require_once __DIR__ . '/backend/helpers/ai.php';
 
-header('Content-Type: text/plain');
+echo "=== TEST WITH REAL INVITATION ===\n";
+flush();
 
-echo "=== CONFIG ===\n";
-echo "API Key set: " . (defined('ANTHROPIC_API_KEY') && ANTHROPIC_API_KEY !== 'sk-ant-PASTE_YOUR_KEY_HERE' ? 'YES (' . substr(ANTHROPIC_API_KEY, 0, 15) . '...)' : 'NO - KEY NOT SET!') . "\n";
-echo "Model Fast: " . AI_MODEL_FAST . "\n";
-echo "Model Rich: " . AI_MODEL_RICH . "\n";
-echo "Upload dir exists: " . (is_dir(__DIR__ . '/uploads') ? 'YES' : 'NO') . "\n";
-echo "Upload dir writable: " . (is_writable(__DIR__ . '/uploads') ? 'YES' : 'NO') . "\n\n";
+$db  = db();
+$inv = $db->query("SELECT i.*, d.* FROM invitations i 
+                   LEFT JOIN invitation_details d ON d.invitation_id = i.id 
+                   ORDER BY i.id DESC LIMIT 1")->fetch();
 
-echo "=== TESTING ANTHROPIC API ===\n";
-$result = claude_request(AI_MODEL_FAST, 'You are a test assistant.', 'Reply with just the word: OK', 10);
-echo "Response: " . ($result ?? 'NULL - API call failed!') . "\n\n";
+if (!$inv) { echo "No invitations found.\n"; exit; }
 
-echo "=== PHP INFO ===\n";
-echo "PHP version: " . PHP_VERSION . "\n";
-echo "cURL enabled: " . (function_exists('curl_init') ? 'YES' : 'NO') . "\n";
-echo "ob_start available: " . (function_exists('ob_start') ? 'YES' : 'NO') . "\n";
+echo "Invitation #{$inv['id']}: {$inv['groom_name']} & {$inv['bride_name']}\n";
+echo "Calling ai_generate_design()... (may take 5-10 seconds)\n";
+flush();
+
+$design = ai_generate_design($inv);
+
+if ($design) {
+    echo "✅ SUCCESS\n";
+    echo "theme_mood: " . ($design['theme_mood'] ?? '?') . "\n";
+    echo "palette: " . json_encode($design['palette'] ?? []) . "\n";
+} else {
+    echo "❌ FAILED — returned null\n";
+    echo "Check: /Applications/XAMPP/xamppfiles/logs/php_error_log\n";
+}
+flush();
+
+echo "\n=== MAX EXECUTION TIME ===\n";
+echo "max_execution_time: " . ini_get('max_execution_time') . " seconds\n";
